@@ -18,12 +18,15 @@ const isDark = computed({
 })
 const navigation = [
   { name: 'Dashboard', href: '/', icon: "i-heroicons-home", current: "/" ,action:"all" ,subject:"all" },
-  { name: 'Packages', href: '/packages', icon: "i-heroicons-light-bulb", current: "/packages" ,action:"list" ,subject:"package" },
-  { name: 'Rates', href: '/rates', icon: "i-heroicons-light-bulb", current: "/rates" ,action:"list" ,subject:"rate" },
-  { name: 'Services', href: '/services', icon: "i-heroicons-light-bulb", current: "/services" ,action:"list" ,subject:"service" },
-  { name: 'Users', href: '/users', icon: "i-heroicons-light-bulb", current: "/users" ,action:"list" ,subject:"admin" },
-  { name: 'Roles', href: '/roles', icon: "i-heroicons-light-bulb", current: "/roles", action:"list" ,subject:"role" },
-  { name: 'Permissions', href: '/permissions', icon: "i-heroicons-light-bulb", current: "/permissions", action:"list" ,subject:"permission" },
+  { name: 'Customers', href: '/customers', icon: "i-heroicons-user-group", current: "/customers" ,action:"list" ,subject:"customer" },
+  { name: 'Packages', href: '/packages', icon: "i-heroicons-inbox-stack", current: "/packages" ,action:"list" ,subject:"package" },
+  { name: 'Rates', href: '/rates', icon: "i-heroicons-arrow-path-rounded-square", current: "/rates" ,action:"list" ,subject:"rate" },
+  { name: 'Services', href: '/services', icon: "i-heroicons-arrow-down-on-square-stack", current: "/services" ,action:"list" ,subject:"service" },
+  { name: 'Service Deductions', href: '/service_deductions', icon: "i-heroicons-presentation-chart-line", current: "/service_deductions" ,action:"list" ,subject:"service_deduction" },
+  { name: 'Users', href: '/users', icon: "i-heroicons-users", current: "/users" ,action:"list" ,subject:"admin" },
+  { name: 'Countries', href: '/countries', icon: "i-heroicons-flag", current: "/countries" ,action:"list" ,subject:"country" },
+  { name: 'Roles', href: '/roles', icon: "i-heroicons-user-plus", current: "/roles", action:"list" ,subject:"role" },
+  { name: 'Permissions', href: '/permissions', icon: "i-heroicons-lock-closed", current: "/permissions", action:"list" ,subject:"permission" },
 ]
 const teams = [
   // { id: 1, name: 'Heroicons', href: '#', initial: 'H', current: false },

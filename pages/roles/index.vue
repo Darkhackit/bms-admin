@@ -363,7 +363,7 @@ onMounted(async () => {
                     by="id"
                 >
                   <template #label>
-                    <span v-if="editForm.permissions.length" class="truncate">{{ editForm.permissions.map(p => p.name).join(', ') }}</span>
+                    <span v-if="editForm.permissions.length" class="truncate">{{ editForm.permissions.map(p => p.name).join(',') }}</span>
                     <span v-else>Select permission</span>
                   </template>
                 </USelectMenu>

@@ -1,5 +1,6 @@
 import axios from "axios";
-
+import NProgress from 'nprogress'
+import 'nprogress/nprogress.css'
 
 const api = axios.create({
     baseURL: 'http://localhost:8000/a/api',
@@ -7,15 +8,17 @@ const api = axios.create({
 })
 
 const requestHandler = request => {
+    NProgress.start()
     return request
 }
 
 const responseHandler = response => {
+    NProgress.done()
     return response
 }
 
 const errorHandler = error => {
-
+    NProgress.done()
     return Promise.reject(error)
 }
 

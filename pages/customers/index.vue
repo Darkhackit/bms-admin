@@ -2,7 +2,7 @@
 import api from "~/utils/api.js";
 import SkeletonLoader from "~/components/skeletonLoader.vue";
 import {useAbility} from "@casl/vue";
-
+const ws = useNuxtApp().$ws
 const toast = useToast();
 const {can} = useAbility()
 const processing = ref(false)
@@ -17,7 +17,17 @@ const page = ref(1)
 const size = ref(10)
 const total = ref(0)
 const roles = ref([])
+const permissions = ref([])
+const main_users = ref([])
+const total_customers = ref(0)
+const active_customers = ref(0)
+const disabled_customers = ref(0)
+const verified_customers = ref(0)
+const sub_customers = ref(0)
+const main_customers = ref(0)
 const loadRoles = ref(false)
+const loadMainusers = ref(false)
+const loadPermission = ref(false)
 const canEditAdmin = computed(() => can('show', 'customer') || can('manage', 'all'));
 const canDisableAdmin = computed(() => can('disable', 'customer') || can('manage', 'all'));
 const options = ref(['all','disabled','verified','not_verified','active','main_account','sub_account'])
@@ -35,9 +45,12 @@ const form = ref({
   dob:'',
   password:'',
   password_confirmation:'',
-  login_at:false,
-  otp:false,
-  roles:[]
+  sub_account:false,
+  country_name:'',
+  country_code:'',
+  countries:"",
+  users:"",
+  user_id:''
 })
 const editForm = ref({
   id:'',
@@ -46,8 +59,13 @@ const editForm = ref({
   email:'',
   phone_number:'',
   dob:'',
-  otp:false,
-  roles:[]
+  sub_account:true,
+  country_name:'',
+  country_code:'',
+  countries:"",
+  users:"",
+  user_id:'',
+  permissions:[]
 })
 const columns = ref([
   {
@@ -57,15 +75,18 @@ const columns = ref([
   },
   {
     key:"email",
-    label:"Email"
+    label:"Email",
+    sortable: true,
   },
   {
     key:"username",
-    label:"Username"
+    label:"Username",
+    sortable: true,
   },
   {
     key:"account_type",
-    label:"Account Type"
+    label:"Account Type",
+    sortable: true,
   },
   {
     key:"phone_number",
@@ -73,11 +94,13 @@ const columns = ref([
   },
   {
     key:"balance",
-    label:"Balance"
+    label:"Balance",
+    sortable: true,
   },
   {
     key:"country",
-    label:"Country"
+    label:"Country",
+    sortable: true,
   },
   {
     key:"date_of_birth",
@@ -85,43 +108,49 @@ const columns = ref([
   },
   {
     key:"sender_count",
-    label:"Sender Count"
+    label:"Sender Count",
+    sortable: true,
   },
   {
     key:"template_count",
-    label:"Template Count"
+    label:"Template Count",
+    sortable: true,
   },
-  {
-    key:"template_count",
-    label:"Template Count"
-  },
+
   {
     key:"sent_messages_count",
-    label:"Subscription Count"
+    label:"Sent Message",
+    sortable: true,
   },
   {
     key:"subscription_count",
-    label:"Subscription Count"
+    label:"Subscription Count",
+    sortable: true,
   },
   {
     key:"groups_count",
-    label:"Groups Count"
+    label:"Groups Count",
+    sortable: true,
   },
   {
     key:"contact_count",
-    label:"Contacts Count"
+    label:"Contacts Count",
+    sortable: true,
   },
   {
     key:"message_source_count",
-    label:"Message Source Count"
+    label:"Message Source Count",
+    sortable: true,
   },
   {
     key:"scheduled_message_count",
-    label:"Scheduled Message Count"
+    label:"Scheduled Message Count",
+    sortable: true,
   },
   {
     key:"birth_day_alert_count",
-    label:"Birthday Alert Count"
+    label:"Birthday Alert Count",
+    sortable: true,
   },
 
   {
@@ -175,6 +204,12 @@ watch(() => status.value , (newVal) => {
    end.value = ""
    q.value = ""
 })
+watch(() => form.value.sub_account , () => {
+    form.value.users = ""
+})
+watch(() => editForm.value.sub_account , () => {
+  editForm.value.users = ""
+})
 const items = row => [
   [canEditAdmin.value ? {
     label: 'Edit',
@@ -190,23 +225,25 @@ const items = row => [
 
 const addData = async () => {
   processing.value = true
+  form.value.country_name = form.value.countries?.name
+  form.value.country_code = form.value.countries?.code
+  form.value.user_id = form.value.users?.id
   try {
-    await api.post("/admins", form.value)
+    await api.post("/users/add", form.value)
     await getData()
     processing.value = false
     form.value.name = ""
     form.value.username = ""
     form.value.email = ""
     form.value.phone_number = ""
-    form.value.dob = ""
-    form.value.roles = []
+    form.value.country_code = ""
+    form.value.country_code = ""
     form.value.password = ""
     form.value.password_confirmation = ""
-    form.value.login_at = false
-    form.value.otp = false
+    form.value.user_id = ""
     isOpen.value = false
     toast.add({
-      title:"User Created Successfully",
+      title:"Customer Created Successfully",
     })
   }catch (e) {
     console.log(e)
@@ -222,8 +259,11 @@ const addData = async () => {
 
 const updateData = async () => {
   processing.value = true
+  editForm.value.country_code = editForm.value.countries?.code
+  editForm.value.country_name = editForm.value.countries?.name
+  editForm.value.user_id = editForm.value.users?.id
   try {
-    await api.patch(`/admins/${editForm.value.id}`, editForm.value)
+    await api.patch(`/users/update/${editForm.value.id}`, editForm.value)
     await getData()
     processing.value = false
     editModal.value = false
@@ -243,17 +283,17 @@ const updateData = async () => {
 const getSingleData = async (id) => {
   processing.value = true
   try {
-    let response = await api.get(`/admins/${id}`)
+    let response = await api.get(`/users/show/${id}`)
     console.log(response)
-    editForm.value.id = response.data.data?.id
-    editForm.value.name = response.data.data?.name
-    editForm.value.roles = response.data.data?.roles
-    editForm.value.username = response.data.data?.username
-    editForm.value.email = response.data.data?.email
-    editForm.value.phone_number = response.data.data?.phone_number
-    editForm.value.dob = response.data.data?.dob
-    editForm.value.login_at = response.data.data?.login_at
-    editForm.value.otp = response.data.data?.otp
+    editForm.value.id = response.data?.id
+    editForm.value.name = response.data?.name
+    editForm.value.permissions = response.data?.permissions ?? []
+    editForm.value.username = response.data?.username
+    editForm.value.email = response.data?.email
+    editForm.value.phone_number = response.data?.phone_number
+    editForm.value.sub_account = response.data?.sub_account
+    editForm.value.countries = response.data?.country
+    editForm.value.users = response.data?.user
     processing.value = false
     editModal.value = true
   }catch (e) {
@@ -283,6 +323,12 @@ const getData = async () => {
       page.value = response.data.pages?.current_page
       size.value = response.data.pages.page_size
       total.value = response.data.pages?.total_count
+      total_customers.value = response.data.count?.total_users
+      active_customers.value = response.data.count?.active_users
+      verified_customers.value = response.data.count?.unverified_users
+      disabled_customers.value = response.data.count?.disabled_users
+      main_customers.value = response.data.count?.main_accounts
+      sub_customers.value = response.data.count?.sub_accounts
     }
     processing.value = false
   }catch (e) {
@@ -327,21 +373,59 @@ const deleteData = async (id) => {
 const getRoles = async (q) => {
   loadRoles.value = true
   const params = {
-    search:q
+    name:q
   }
   try{
-    let response = await api.get("/roles",{params})
+    let response = await api.get("/countries",{params})
     if (response.data.data == null) {
       roles.value = []
     }else {
       roles.value = response.data.data
     }
-    console.log("Hey")
     loadRoles.value = false
     return roles.value
   }catch (e) {
     console.log(e)
     loadRoles.value = false
+  }
+}
+const getMainUsers = async (q) => {
+  loadMainusers.value = true
+  const params = {
+    search:q
+  }
+  try{
+    let response = await api.get("/users/main",{params})
+    if (response.data.data == null) {
+      main_users.value = []
+    }else {
+      main_users.value = response.data.data
+    }
+    loadMainusers.value = false
+    return main_users.value
+  }catch (e) {
+    console.log(e)
+    loadMainusers.value = false
+  }
+}
+
+const getPermissions = async (q) => {
+  loadPermission.value = true
+  const params = {
+    search:q
+  }
+  try{
+    let response = await api.get("/permissions",{params})
+    if (response.data.data == null) {
+      permissions.value = []
+    }else {
+      permissions.value = response.data.data
+    }
+    loadPermission.value = false
+    return permissions.value
+  }catch (e) {
+    console.log(e)
+    loadPermission.value = false
   }
 }
 
@@ -356,6 +440,9 @@ const convertDate = (dateString) => {
 }
 
 onMounted(async () => {
+  ws.on('wallet-created',data => {
+    console.log(data);
+  })
   await getData()
   // await getPermissions()
   loader.value = false
@@ -393,22 +480,30 @@ onMounted(async () => {
              <UButton color="black" variant="solid" @click.prevent="getSearchData" size="2xs">Search</UButton>
            </div>
          </div>
-          <dl class="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-4">
+          <dl class="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-6">
             <UCard class="overflow-hidden rounded-lg">
               <dt class="truncate text-sm font-medium ">Total Customers</dt>
-              <dd class="mt-1 text-3xl font-semibold tracking-tight ">100</dd>
+              <dd class="mt-1 text-3xl font-semibold tracking-tight ">{{ total_customers }}</dd>
             </UCard>
             <UCard class="overflow-hidden rounded-lg">
               <dt class="truncate text-sm font-medium ">Active Customers</dt>
-              <dd class="mt-1 text-3xl font-semibold tracking-tight ">100</dd>
+              <dd class="mt-1 text-3xl font-semibold tracking-tight ">{{ active_customers }}</dd>
             </UCard>
             <UCard class="overflow-hidden rounded-lg">
-              <dt class="truncate text-sm font-medium ">Verified Customers</dt>
-              <dd class="mt-1 text-3xl font-semibold tracking-tight ">100</dd>
+              <dt class="truncate text-sm font-medium ">Unverified Customers</dt>
+              <dd class="mt-1 text-3xl font-semibold tracking-tight ">{{ verified_customers }}</dd>
             </UCard>
             <UCard class="overflow-hidden rounded-lg">
-              <dt class="truncate text-sm font-medium ">Disaled Customers</dt>
-              <dd class="mt-1 text-3xl font-semibold tracking-tight ">100</dd>
+              <dt class="truncate text-sm font-medium ">Disabled Customers</dt>
+              <dd class="mt-1 text-3xl font-semibold tracking-tight ">{{ disabled_customers }}</dd>
+            </UCard>
+            <UCard class="overflow-hidden rounded-lg">
+              <dt class="truncate text-sm font-medium ">Main Customers</dt>
+              <dd class="mt-1 text-3xl font-semibold tracking-tight ">{{ main_customers }}</dd>
+            </UCard>
+            <UCard class="overflow-hidden rounded-lg">
+              <dt class="truncate text-sm font-medium ">Sub Customers</dt>
+              <dd class="mt-1 text-3xl font-semibold tracking-tight ">{{ sub_customers }}</dd>
             </UCard>
           </dl>
         </div>
@@ -517,7 +612,7 @@ onMounted(async () => {
         <template #header>
           <div class="flex items-center justify-between">
             <h3 class="text-base font-semibold leading-6 text-gray-900 dark:text-white uppercase">
-              Add User
+              Add Customer
             </h3>
             <UButton color="gray" variant="ghost" icon="i-heroicons-x-mark-20-solid" class="-my-1" @click="isOpen = false" />
           </div>
@@ -552,25 +647,34 @@ onMounted(async () => {
               </div>
               <div class="grid grid-cols-2 space-x-2 items-center">
                 <div class="space-y-2">
-                  <label>Date Of Birth</label>
-                  <UInput v-model="form.dob" @input="clearErrors('dob')" type="date" :input-class="errors.dob ? 'border border-red-500' :''"  placeholder="Name"  />
-                  <small class="text-red-500" v-if="errors?.dob">{{errors.dob}}</small>
-                </div>
-                <div class="space-y-2">
-                  <label>Roles</label>
+                  <label>Country</label>
                   <USelectMenu
-                      clear-search-on-close
                       option-attribute="name"
-                      v-model="form.roles"
+                      v-model="form.countries"
+                      :options="roles"
                       :loading="loadRoles"
                       :searchable="getRoles"
-                      trailing
-                      multiple
-                      by="id"
+                      placeholder="Select Type"
                   >
                     <template #label>
-                      <span v-if="form.roles.length" class="truncate">{{ form.roles.map(r => r.name).join(",")}}</span>
-                      <span v-else>Select permission</span>
+                      <span v-if="form.countries" class="truncate">{{ form.countries?.name}}</span>
+                      <span v-else>Select Country</span>
+                    </template>
+                  </USelectMenu>
+                </div>
+                <div class="space-y-2" v-if="form.sub_account">
+                  <label>Main Account</label>
+                  <USelectMenu
+                      option-attribute="email"
+                      v-model="form.users"
+                      :loading="loadMainusers"
+                      :options="main_users"
+                      :searchable="getMainUsers"
+                      placeholder="Select Type"
+                  >
+                    <template #label>
+                      <span v-if="form.users" class="truncate">{{ form.users?.email}}</span>
+                      <span v-else>Select Main Account</span>
                     </template>
                   </USelectMenu>
                 </div>
@@ -588,13 +692,10 @@ onMounted(async () => {
                 </div>
               </div>
               <div>
-                <UCheckbox v-model="form.login_at" name="notifications" label="Change Password When logged in" />
+                <UCheckbox v-model="form.sub_account" name="notifications" label="Sub Account" />
               </div>
-              <div>
-                <UCheckbox v-model="form.otp" name="notifications" label="Enable Otp" />
-              </div>
-              <div class="flex justify-end" v-if="$can('manage','all') || $can('add','admin')">
-                <UButton type="submit" :loading="processing" color="black" variant="solid">Add User</UButton>
+              <div class="flex justify-end" v-if="$can('manage','all') || $can('add','customer')">
+                <UButton type="submit" :loading="processing" color="black" variant="solid">Add Customer</UButton>
               </div>
             </div>
           </form>
@@ -611,7 +712,7 @@ onMounted(async () => {
         <template #header>
           <div class="flex items-center justify-between">
             <h3 class="text-base font-semibold leading-6 text-gray-900 dark:text-white uppercase">
-              Update User
+              Update Customer
             </h3>
             <UButton color="gray" variant="ghost" icon="i-heroicons-x-mark-20-solid" class="-my-1" @click="editModal = false" />
           </div>
@@ -646,33 +747,62 @@ onMounted(async () => {
               </div>
               <div class="grid grid-cols-2 space-x-2 items-center">
                 <div class="space-y-2">
-                  <label>Date Of Birth</label>
-                  <UInput v-model="editForm.dob" @input="clearError('dob')" type="date" :input-class="error.dob ? 'border border-red-500' :''"  placeholder="Name"  />
-                  <small class="text-red-500" v-if="error?.dob">{{error.dob}}</small>
-                </div>
-                <div class="space-y-2">
-                  <label>Roles</label>
+                  <label>Country</label>
                   <USelectMenu
                       option-attribute="name"
-                      v-model="editForm.roles"
+                      v-model="editForm.countries"
+                      :options="roles"
                       :loading="loadRoles"
                       :searchable="getRoles"
-                      trailing
+                      placeholder="Select Type"
+                  >
+                    <template #label>
+                      <span v-if="editForm.countries" class="truncate">{{ editForm.countries?.name}}</span>
+                      <span v-else>Select Country</span>
+                    </template>
+                  </USelectMenu>
+                </div>
+                <div class="space-y-2" v-if="editForm.sub_account">
+                  <label>Main Account</label>
+                  <USelectMenu
+                      option-attribute="email"
+                      v-model="editForm.users"
+                      :loading="loadMainusers"
+                      :options="main_users"
+                      :searchable="getMainUsers"
+                      placeholder="Select Type"
+                  >
+                    <template #label>
+                      <span v-if="editForm.users" class="truncate">{{ editForm.users?.email}}</span>
+                      <span v-else>Select Main Account</span>
+                    </template>
+                  </USelectMenu>
+                </div>
+              </div>
+              <div class="">
+                <div>
+                  <label>Permissions</label>
+                  <USelectMenu
+                      option-attribute="name"
+                      v-model="editForm.permissions"
+                      :loading="loadPermission"
+                      :searchable="getPermissions"
                       multiple
+                      trailing
                       by="id"
                   >
                     <template #label>
-                      <span v-if="editForm.roles.length" class="truncate">{{ editForm.roles.map(r => r.name).join(",")}}</span>
-                      <span v-else>Select Role</span>
+                      <span v-if="editForm.permissions.length" class="truncate">{{ editForm.permissions.map(p => p.name).join(', ') }}</span>
+                      <span v-else>Select permission</span>
                     </template>
                   </USelectMenu>
                 </div>
               </div>
               <div>
-                <UCheckbox v-model="editForm.otp" name="notifications" label="Enable Otp" />
+                <UCheckbox v-model="editForm.sub_account" name="notifications" label="Sub Account" />
               </div>
-              <div class="flex justify-end" v-if="$can('manage','all') || $can('update','admin')">
-                <UButton type="submit" :loading="processing" color="black" variant="solid">Update User</UButton>
+              <div class="flex justify-end" v-if="$can('manage','all') || $can('update','customer')">
+                <UButton type="submit" :loading="processing" color="black" variant="solid">Update Customer</UButton>
               </div>
             </div>
           </form>

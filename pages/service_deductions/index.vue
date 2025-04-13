@@ -149,7 +149,7 @@ const getSingleData = async (id) => {
     editForm.value.service = response.data.data?.service_id
     editForm.value.sender_country = response.data.data?.sender_country_id
     editForm.value.receiver_country = response.data.data?.receiver_country_id
-    editForm.value.unit_deduction = response.data.data?.unit_deduction
+    editForm.value.unit_deduction = response.data.data?.unit_deduction?.toString()
     processing.value = false
     editModal.value = true
   }catch (e) {
@@ -508,7 +508,7 @@ onMounted(async () => {
               </div>
               <div class="space-y-2">
                 <label>Unit Deduction</label>
-                <UInput v-model="editForm.unit_deduction" @input="clearError('unit_deduction')" :input-class="error.unit_deduction ? 'border border-red-500' :''"  placeholder="Unit Deduction"  />
+                <UInput v-model="editForm.unit_deduction" @input="clearError('unit_deduction')" type="text" :input-class="error.unit_deduction ? 'border border-red-500' :''"  placeholder="Unit Deduction"  />
                 <small class="text-red-500" v-if="error?.unit_deduction">{{error.unit_deduction}}</small>
               </div>
               <div class="flex justify-end" v-if="$can('manage','all') || $can('update','service_deduction')">

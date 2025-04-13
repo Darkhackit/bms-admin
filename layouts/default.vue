@@ -18,6 +18,10 @@ const isDark = computed({
 })
 const navigation = [
   { name: 'Dashboard', href: '/', icon: "i-heroicons-home", current: "/" ,action:"all" ,subject:"all" },
+  { name: 'Contacts', href: '/contacts', icon: "i-heroicons-identification", current: "/contacts" ,action:"list" ,subject:"contact" },
+  { name: 'Senders', href: '/senders', icon: "i-heroicons-arrow-left-start-on-rectangle", current: "/senders" ,action:"list" ,subject:"sender" },
+  { name: 'Templates', href: '/templates', icon: "i-heroicons-rectangle-stack", current: "/templates" ,action:"list" ,subject:"template" },
+  { name: 'Groups', href: '/groups', icon: "i-heroicons-rectangle-group", current: "/groups" ,action:"list" ,subject:"group" },
   { name: 'Customers', href: '/customers', icon: "i-heroicons-user-group", current: "/customers" ,action:"list" ,subject:"customer" },
   { name: 'Packages', href: '/packages', icon: "i-heroicons-inbox-stack", current: "/packages" ,action:"list" ,subject:"package" },
   { name: 'Rates', href: '/rates', icon: "i-heroicons-arrow-path-rounded-square", current: "/rates" ,action:"list" ,subject:"rate" },

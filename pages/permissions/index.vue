@@ -17,18 +17,25 @@ const page = ref(1)
 const size = ref(10)
 const total = ref(0)
 const form = ref({
-  name:''
+  name:'',
+  is_user:false,
 })
 const canEditPermission = computed(() => can('show', 'permission') || can('manage', 'all'));
 const canDeletePermission = computed(() => can('delete', 'permission') || can('manage', 'all'));
 const editForm = ref({
   id:'',
-  name:''
+  name:'',
+  is_user:false,
 })
   const columns = ref([
     {
       key: "name",
       label: "Name",
+      sortable: true,
+    },
+    {
+      key: "is_user",
+      label: "Is User",
       sortable: true,
     },
     {
@@ -113,6 +120,7 @@ const items = row => [
       console.log(response)
       editForm.value.id = response.data.data?.id
       editForm.value.name = response.data.data?.name
+      editForm.value.is_user = response.data.data?.is_user
       processing.value = false
       editModal.value = true
     }catch (e) {
@@ -277,6 +285,9 @@ const deleteData = async (id) => {
                  <UInput v-model="form.name" @input="clearErrors('name')" :input-class="errors.name ? 'border border-red-500' :''"  placeholder="Name"  />
                  <small class="text-red-500" v-if="errors?.name">{{errors.name}}</small>
                </div>
+               <div>
+                 <UCheckbox label="Is User" v-model="form.is_user" />
+               </div>
                <div class="flex justify-end" v-if="$can('manage','all') || $can('add','permission')">
                  <UButton type="submit" :loading="processing" color="black" variant="solid">Add Permission</UButton>
                </div>
@@ -308,6 +319,9 @@ const deleteData = async (id) => {
                 <label>Name</label>
                 <UInput v-model="editForm.name" @input="clearError('name')" :input-class="error.name ? 'border border-red-500' :''"  placeholder="Name"  />
                 <small class="text-red-500" v-if="error?.name">{{errors.name}}</small>
+              </div>
+              <div>
+                <UCheckbox label="Is User" v-model="editForm.is_user" />
               </div>
               <div class="flex justify-end" v-if="$can('manage','all') || $can('update','permission')">
                 <UButton type="submit" :loading="processing" color="black" variant="solid">Update Permission</UButton>

@@ -18,6 +18,7 @@ const isDark = computed({
 })
 const navigation = [
   { name: 'Dashboard', href: '/', icon: "i-heroicons-home", current: "/" ,action:"all" ,subject:"all" },
+  { name: 'Automations', href: '/automations', icon: "i-heroicons-globe-asia-australia", current: "/automations" ,action:"list" ,subject:"birthday_alerts" },
   { name: 'Contacts', href: '/contacts', icon: "i-heroicons-identification", current: "/contacts" ,action:"list" ,subject:"contact" },
   { name: 'Senders', href: '/senders', icon: "i-heroicons-arrow-left-start-on-rectangle", current: "/senders" ,action:"list" ,subject:"sender" },
   { name: 'Templates', href: '/templates', icon: "i-heroicons-rectangle-stack", current: "/templates" ,action:"list" ,subject:"template" },

@@ -2,9 +2,11 @@
 import api from "~/utils/api.js";
 import SkeletonLoader from "~/components/skeletonLoader.vue";
 import {useAbility} from "@casl/vue";
+import {usePermissionStore} from "~/store/permission.js";
 
 const toast = useToast();
 const {can} = useAbility()
+const permissionStore = usePermissionStore()
 const processing = ref(false)
 const isOpen = ref(false)
 const editModal = ref(false)
@@ -73,7 +75,7 @@ const items = row => [
   const addData = async () => {
    processing.value = true
      try {
-       await api.post("/permissions", form.value)
+       await permissionStore.addPermission(form.value)
        await getData()
        processing.value = false
        form.value.name = ""
